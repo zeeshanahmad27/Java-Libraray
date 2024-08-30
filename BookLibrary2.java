@@ -15,6 +15,47 @@ class BookScanner {
         bookDetails.put("CreationTime", creationTime);
 
         //Loop for Title, Author and Publisher attributes to take input from the user: mandatory Inputs
+        mandatoryAttributes(myObj, bookDetails);
+
+        //Loop in which Entered year input is taken by user and check the valid input year from 1 to Current year
+        yearInputCheck(myObj, bookDetails);
+
+        //Loop that make sure that the ISBN is correct and must be 10 or 13 digits
+        ISBNcheck(myObj, bookDetails);
+
+        //Loop for Subtitle and Description attributes to take input from the user: Non-mandatory inputs
+        nonMandatoryAttributes(myObj, bookDetails);
+
+        // Store formatted creation time
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        String formattedDate = creationTime.format(formatter);
+        bookDetails.put("Time of Book Creation", formattedDate);
+        bookDetails.put("EditTime", "");
+
+        return bookDetails;
+    }
+
+    private static void nonMandatoryAttributes(Scanner myObj, HashMap<String, Object> bookDetails) {
+        String[] bookAttributesNonMandatory = {"Subtitle", "Description"};
+        for (String a : bookAttributesNonMandatory) {
+            System.out.print("Enter the " + a + " of the book: ");
+            bookDetails.put(a, myObj.nextLine());
+        }
+    }
+
+    private static void ISBNcheck(Scanner myObj, HashMap<String, Object> bookDetails) {
+        do {
+            System.out.print("Enter the ISBN of the book (must be a 10 or 13 digit number): ");
+            String isbn = myObj.nextLine();
+            if (isbn.matches("[0-9]{10}") || isbn.matches("[0-9]{13}")) {
+                bookDetails.put("ISBN", isbn);
+            } else {
+                System.out.println("Please enter a valid ISBN (10 or 13 digit number)");
+            }
+        } while (!bookDetails.containsKey("ISBN"));
+    }
+
+    private static void mandatoryAttributes(Scanner myObj, HashMap<String, Object> bookDetails) {
         String[] bookAttributesMandatory = {"Title", "Author", "Publisher"};
         for (String a : bookAttributesMandatory) {
             do {
@@ -25,8 +66,9 @@ class BookScanner {
                 }
             } while (bookDetails.get(a).toString().isEmpty());
         }
+    }
 
-        //Loop in which Entered year input is taken by user and check the valid input year from 1 to Current year
+    private static void yearInputCheck(Scanner myObj, HashMap<String, Object> bookDetails) {
         do {
             System.out.print("Enter the PublishingYear* of the book: ");
             try {
@@ -41,32 +83,6 @@ class BookScanner {
                 System.out.println("Please enter a valid integer for PublishingYear* (1-2024)");
             }
         } while (!bookDetails.containsKey("PublishingYear"));
-
-        //Loop that make sure that the ISBN is correct and must be 10 or 13 digits
-        do {
-            System.out.print("Enter the ISBN of the book (must be a 10 or 13 digit number): ");
-            String isbn = myObj.nextLine();
-            if (isbn.matches("[0-9]{10}") || isbn.matches("[0-9]{13}")) {
-                bookDetails.put("ISBN", isbn);
-            } else {
-                System.out.println("Please enter a valid ISBN (10 or 13 digit number)");
-            }
-        } while (!bookDetails.containsKey("ISBN"));
-
-        //Loop for Subtitle and Description attributes to take input from the user: Non-mandatory inputs
-        String[] bookAttributesNonMandatory = {"Subtitle", "Description"};
-        for (String a : bookAttributesNonMandatory) {
-            System.out.print("Enter the " + a + " of the book: ");
-            bookDetails.put(a, myObj.nextLine());
-        }
-
-        // Store formatted creation time
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-        String formattedDate = creationTime.format(formatter);
-        bookDetails.put("Time of Book Creation", formattedDate);
-        bookDetails.put("EditTime", "");
-
-        return bookDetails;
     }
 
     //Method to write the data on Exported HTML file
@@ -108,6 +124,10 @@ public class BookLibrary2 {
         serialization();
 
         // Choose Function
+        functionMethod(scanMore);
+    }
+
+    private static void functionMethod(Scanner scanMore) {
         System.out.println("Do you want to choose any function? (Yes/No)");
         String useOfFunction = scanMore.nextLine();
         if (useOfFunction.equalsIgnoreCase("yes")) {
@@ -119,94 +139,113 @@ public class BookLibrary2 {
             scanMore.nextLine();
 
             //Function 1
-            if (programChoose == 1) {
-                // Print book details
-                int i = 0;
-                for (HashMap<String, Object> book : library.values()) {
-                    i++;
-                    System.out.println("Book " + i);
-                    String[] bookAttributes = {"Title", "Author", "Publisher", "PublishingYear", "Subtitle", "ISBN", "Description", "Time of Book Creation", "EditTime"};
-                    for (String a : bookAttributes) {
-                        System.out.println(a + ": " + book.get(a));
-                    }
-                    System.out.println();
-                }
-
-                //Function 2
-            } else if (programChoose == 2) {
-                // Edit books
-                System.out.println("Following books are available to edit:");
-                //Loop to Print Title of all Books in the Library
-                bookTitles();
-                System.out.println("Please enter the book from the list above you want to edit:");
-                String bookEntered = scanMore.nextLine();
-
-                if (library.containsKey(bookEntered)) {
-                    HashMap<String, Object> bookToEdit = library.get(bookEntered);
-                    String moreAttri;
-                    do {
-                        System.out.println("Enter the attribute you want to edit: Title, Author, Publisher, PublishingYear, Subtitle, ISBN, Description");
-                        String attributeConfirm = scanMore.nextLine();
-
-                        if (attributeConfirm.equalsIgnoreCase("Title") ||
-                                attributeConfirm.equalsIgnoreCase("Author") ||
-                                attributeConfirm.equalsIgnoreCase("Publisher") ||
-                                attributeConfirm.equalsIgnoreCase("PublishingYear") ||
-                                attributeConfirm.equalsIgnoreCase("Subtitle") ||
-                                attributeConfirm.equalsIgnoreCase("ISBN") ||
-                                attributeConfirm.equalsIgnoreCase("Description")) {
-                            System.out.println("Enter the new value for that attribute:");
-                            String newValue = scanMore.nextLine();
-                            bookToEdit.put(attributeConfirm, newValue);
-
-                            // Update the edit time
-                            LocalDateTime editTime = LocalDateTime.now();
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-                            bookToEdit.put("EditTime", editTime.format(formatter));
-
-                            writeInFile();
-
-                            serialization();
-                        } else {
-                            System.out.println("You entered an invalid attribute.");
-                        }
-
-                        System.out.println("Do you want to edit more attributes? (Yes/No)");
-                        moreAttri = scanMore.nextLine();
-                    } while (moreAttri.equalsIgnoreCase("yes"));
-
-                    System.out.println("Updated book details:");
-                    System.out.println(bookToEdit);
-                } else {
-                    System.out.println("The entered book does not exist.");
-
-                }
-            // Function 3
-            } else if (programChoose == 3) {
-
-                // Loop to Print Title of all Books in the Library
-                bookTitles();
-                // Deleting books
-                System.out.println("Please enter the book from the list above you want to delete:");
-                String bookConfirm = scanMore.nextLine();
-                if (library.containsKey(bookConfirm)) {
-                    System.out.println("Are you sure you want to delete the book: " + bookConfirm + " from the library? (Yes/No)");
-                    String deleteConfirm = scanMore.nextLine();
-                    if (deleteConfirm.equalsIgnoreCase("Yes")) {
-                        library.remove(bookConfirm);
-                        System.out.println("Book: " + bookConfirm + " has been deleted from the library. The list of remaining books:");
-                        System.out.println(library);
-
-                        writeInFile();
-                        serialization();
-                        scanMore.close();
-                    }
-                } else {
-                    System.out.println("Book " + bookConfirm + " not found in the library.");
-                }
-            }
+            chooseFunction(scanMore, programChoose);
         } else {
             System.out.println("Program Ends");
+        }
+    }
+
+    private static void chooseFunction(Scanner scanMore, int programChoose) {
+        if (programChoose == 1) {
+            // Print book details
+            printMethod();
+
+            //Function 2
+        } else if (programChoose == 2) {
+            // Edit books
+            editMethod(scanMore);
+            // Function 3
+        } else if (programChoose == 3) {
+
+            // Loop to Print Title of all Books in the Library
+            bookTitles();
+            // Deleting books
+            deleteMethod(scanMore);
+        }
+    }
+
+    private static void printMethod() {
+        int i = 0;
+        for (HashMap<String, Object> book : library.values()) {
+            i++;
+            System.out.println("Book " + i);
+            String[] bookAttributes = {"Title", "Author", "Publisher", "PublishingYear", "Subtitle", "ISBN", "Description", "Time of Book Creation", "EditTime"};
+            for (String a : bookAttributes) {
+                System.out.println(a + ": " + book.get(a));
+            }
+            System.out.println();
+        }
+    }
+
+    private static void deleteMethod(Scanner scanMore) {
+        System.out.println("Please enter the book from the list above you want to delete:");
+        String bookConfirm = scanMore.nextLine();
+        if (library.containsKey(bookConfirm)) {
+            System.out.println("Are you sure you want to delete the book: " + bookConfirm + " from the library? (Yes/No)");
+            String deleteConfirm = scanMore.nextLine();
+            if (deleteConfirm.equalsIgnoreCase("Yes")) {
+                library.remove(bookConfirm);
+                System.out.println("Book: " + bookConfirm + " has been deleted from the library. The list of remaining books:");
+                System.out.println(library);
+
+                writeInFile();
+                serialization();
+                scanMore.close();
+            }
+        } else {
+            System.out.println("Book " + bookConfirm + " not found in the library.");
+        }
+    }
+
+    private static void editMethod(Scanner scanMore) {
+        System.out.println("Following books are available to edit:");
+        //Loop to Print Title of all Books in the Library
+        bookTitles();
+        System.out.println("Please enter the book from the list above you want to edit:");
+        String bookEntered = scanMore.nextLine();
+
+        if (library.containsKey(bookEntered)) {
+            HashMap<String, Object> bookToEdit = library.get(bookEntered);
+            String moreAttri;
+            do {
+                System.out.println("Enter the attribute you want to edit: Title, Author, Publisher, PublishingYear, Subtitle, ISBN, Description");
+                String attributeConfirm = scanMore.nextLine();
+            do {
+                if (attributeConfirm.equalsIgnoreCase("Title") ||
+                        attributeConfirm.equalsIgnoreCase("Author") ||
+                        attributeConfirm.equalsIgnoreCase("Publisher") ||
+                        attributeConfirm.equalsIgnoreCase("PublishingYear") ||
+                        attributeConfirm.equalsIgnoreCase("Subtitle") ||
+                        attributeConfirm.equalsIgnoreCase("ISBN") ||
+                        attributeConfirm.equalsIgnoreCase("Description")) {
+                    System.out.println("Enter the new value for that attribute:");
+                    String newValue = scanMore.nextLine();
+                    bookToEdit.put(attributeConfirm, newValue);
+
+                    // Update the edit time
+                    LocalDateTime editTime = LocalDateTime.now();
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+                    bookToEdit.put("EditTime", editTime.format(formatter));
+
+                    writeInFile();
+
+                    serialization();
+                } else {
+                    System.out.println("You entered an invalid attribute.");
+                    System.out.println("Please enter again");
+                }
+            }while (!library.containsKey(attributeConfirm));
+
+
+                System.out.println("Do you want to edit more attributes? (Yes/No)");
+                moreAttri = scanMore.nextLine();
+            } while (moreAttri.equalsIgnoreCase("yes"));
+
+            System.out.println("Updated book details:");
+            System.out.println(bookToEdit);
+        } else {
+            System.out.println("The entered book does not exist.");
+
         }
     }
 
